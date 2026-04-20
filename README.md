@@ -1,4 +1,4 @@
-# Destroyer Scanner
+# muyuer-恶意脚本查杀引擎（muyuer-destroyer_Scanner）
 
 Destroyer 恶意脚本查杀引擎 - 专注于检测和识别恶意脚本的危险行为，包括杀毒软件杀手、勒索软件相关行为等。
 
@@ -147,4 +147,4 @@ DestroyerScanner(quiet=False)
 
 ## License
 
-MIT License
+LGPL v2.1
