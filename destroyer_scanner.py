@@ -76,6 +76,11 @@ class DestroyerScanner:
         
         # 其他危险特征
         self.other_patterns = [
+            # 恶意下载行为
+            r'bitsadmin\s+/transfer\s+\S+\s+/download',
+            r'certutil\s+-urlcache\s+-split\s+-f',
+            r'powershell\s+-Command\s+.*Invoke-WebRequest',
+            r'powershell\s+-Command\s+.*System\.Net\.WebClient',
             # 删除回收站文件
             r'del\s+/f\s+/s\s+/q\s+.*\$Recycle\.Bin.*',
             # 禁用回收站权限
@@ -155,8 +160,8 @@ class DestroyerScanner:
             r'sc\s+stop\s+Bits',
             # 隐藏文件
             r'attrib\s+\+h\s+\+s\s+\+r\s+\S+',
-            r'reg\s+add\s+.*\Explorer\.*\s+/v\s+Hidden\s+/d\s+2',
-            r'reg\s+add\s+.*\Explorer\.*\s+/v\s+ShowSuperHidden\s+/d\s+0'
+            r'reg\s+add\s+.*\\Explorer.*\s+/v\s+Hidden\s+/d\s+2',
+            r'reg\s+add\s+.*\\Explorer.*\s+/v\s+ShowSuperHidden\s+/d\s+0'
         ]
         
         # 合并所有模式用于检测
@@ -191,6 +196,7 @@ class DestroyerScanner:
             detected_usermanag = False
             detected_avkiller = False
             detected_ransom = False
+            detected_downloader = False
             detected_signatures = []
             
             # 检测KillWin类型的行为
@@ -208,6 +214,7 @@ class DestroyerScanner:
             # 检测其他危险特征
             ransom_patterns = 0
             avkiller_patterns = 0
+            downloader_patterns = 0
             
             for pattern in self.other_patterns:
                 if re.search(pattern, content, re.IGNORECASE):
@@ -215,6 +222,9 @@ class DestroyerScanner:
                     # 检测AVkiller行为（结束杀毒软件）
                     if 'taskkill' in pattern and 'im' in pattern:
                         avkiller_patterns += 1
+                    # 检测下载器行为
+                    elif any(keyword in pattern for keyword in ['bitsadmin', 'certutil', 'Invoke-WebRequest', 'WebClient']):
+                        downloader_patterns += 1
                     # 检测Ransom行为
                     elif any(keyword in pattern for keyword in ['ssh-keygen', 'openssl', 'rename', 'move', 'for.*net user', 'net user', 'sc config', 'sc stop', 'attrib', 'Hidden', 'ShowSuperHidden']):
                         ransom_patterns += 1
@@ -222,6 +232,10 @@ class DestroyerScanner:
             # 检测AVkiller（只要检测到结束杀毒软件进程就判定）
             if avkiller_patterns >= 1:
                 detected_avkiller = True
+            
+            # 检测下载器（只要检测到恶意下载行为就判定）
+            if downloader_patterns >= 1:
+                detected_downloader = True
             
             # 检测Ransom（检测到多个勒索相关行为）
             if ransom_patterns >= 2:
@@ -240,13 +254,15 @@ class DestroyerScanner:
                 threat_type = "AVkiller"
             elif detected_ransom:
                 threat_type = "Ransom"
+            elif detected_downloader:
+                threat_type = "Downloader"
             elif detected_killwin:
                 threat_type = "KillWin"
             elif detected_usermanag:
                 threat_type = "UserManag"
             
             # 如果检测到威胁
-            if detected_avkiller or detected_ransom or detected_killwin or detected_usermanag:
+            if detected_avkiller or detected_ransom or detected_downloader or detected_killwin or detected_usermanag:
                 # 根据文件类型和威胁类型生成威胁名称
                 if ext in ['.bat', '.cmd']:
                     base_name = "Trojan.BAT_Destroyer"
