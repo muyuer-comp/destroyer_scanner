@@ -58,7 +58,33 @@ class DestroyerScanner:
             r'reg\s+add\s+"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"\s+/v\s+NoClose\s+/d\s+1\s+/f',
             r'reg\s+add\s+"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"\s+/v\s+NoLogOff\s+/d\s+1\s+/f',
             # 格式化系统分区
-            r'format\s+C:\s+/fs:NTFS\s+/q\s+/y'
+            r'format\s+C:\s+/fs:NTFS\s+/q\s+/y',
+            # 删除整个系统盘
+            r'del\s+/s\s+/f\s+/q\s+[A-Za-z]:\\',
+            r'del\s+/f\s+/s\s+/q\s+[A-Za-z]:\\',
+            # 修改系统时间
+            r'time\s+\d{1,2}:\d{2}:\d{2}',
+            r'time\s+\d{1,2}:\d{2}',
+            r'date\s+\d{4}-\d{2}-\d{2}',
+            r'date\s+\d{2}/\d{2}/\d{4}',
+            # 禁用任务管理器
+            r'reg\s+add\s+.*\\Policies\\System.*\s+/v\s+DisableTaskMgr\s+/d\s+1',
+            # 禁用控制面板
+            r'reg\s+add\s+.*\\Policies\\Explorer.*\s+/v\s+NoControlPanel\s+/d\s+1',
+            # 禁用注册表编辑器
+            r'reg\s+add\s+.*\\Policies\\System.*\s+/v\s+DisableRegistryTools\s+/d\s+1',
+            # 禁用运行对话框
+            r'reg\s+add\s+.*\\Policies\\Explorer.*\s+/v\s+NoRun\s+/d\s+1',
+            # 禁用CMD
+            r'reg\s+add\s+.*\\Policies\\System.*\s+/v\s+DisableCMD\s+/d\s+1',
+            # 隐藏驱动器
+            r'reg\s+add\s+.*\\Policies\\Explorer.*\s+/v\s+NoDrives\s+/d\s+\d+',
+            # 禁止访问驱动器
+            r'reg\s+add\s+.*\\Policies\\Explorer.*\s+/v\s+NoViewOnDrive\s+/d\s+\d+',
+            # 禁止重启/关机
+            r'reg\s+add\s+.*\\Policies\\Explorer.*\s+/v\s+NoClose\s+/d\s+1',
+            # 禁止注销
+            r'reg\s+add\s+.*\\Policies\\Explorer.*\s+/v\s+NoLogOff\s+/d\s+1'
         ]
         
         self.usermanag_patterns = [
@@ -161,7 +187,23 @@ class DestroyerScanner:
             # 隐藏文件
             r'attrib\s+\+h\s+\+s\s+\+r\s+\S+',
             r'reg\s+add\s+.*\\Explorer.*\s+/v\s+Hidden\s+/d\s+2',
-            r'reg\s+add\s+.*\\Explorer.*\s+/v\s+ShowSuperHidden\s+/d\s+0'
+            r'reg\s+add\s+.*\\Explorer.*\s+/v\s+ShowSuperHidden\s+/d\s+0',
+            # 修改文件关联
+            r'ftype\s+\S+\s*=',
+            r'ftype\s+\S+\s*=\s*notepad\.exe',
+            r'assoc\s+\.\S+\s*=',
+            r'assoc\s+\.\S+\s*=\s*txtfile',
+            # 隐藏文件夹
+            r'attrib\s+\+h\s+\+s\s+\"?.+\"?',
+            r'attrib\s+\+h\s+\"?.+\"?',
+            r'icacls\s+.+\s+/deny\s+Everyone:(OI)\(CI\)F',
+            r'icacls\s+.+\s+/deny\s+Everyone:F',
+            # 禁止访问特定文件夹
+            r'reg\s+add\s+.*\\Explorer.*\s+/v\s+NoFileUrl\s+/d\s+1',
+            # 禁用任务管理器 - 其他方式
+            r'reg\s+add\s+.*\\System.*\s+/v\s+DisableTaskMgr\s+/d\s+2',
+            # 禁用注册表编辑器 - 其他方式
+            r'reg\s+add\s+.*\\System.*\s+/v\s+DisableRegistryTools\s+/d\s+2'
         ]
         
         # 合并所有模式用于检测
